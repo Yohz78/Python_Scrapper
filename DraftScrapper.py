@@ -3,32 +3,32 @@ from bs4 import BeautifulSoup
 
 url = 'http://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html'
 
-r = requests.get(url)
-soup = BeautifulSoup(r.text, 'html.parser')
-articles = soup.find_all('article',class_="product_pod")
+# On crée une classe
+class Scrapper:
+	def __init__(self, url):
+		self.url = url
 
-# # on récupère le titre
-# titres = [art.find('img').get('alt') for art in articles]
+	@property
+	def soup(self):
+		r = requests.get(self.url)
+		soup = BeautifulSoup(r.text, 'html.parser')
+		return soup	
 
-# # on récupère les prix
-# prices = [art.find(class_='price_color').get_text() for art in articles]	
-
-# # on récupère l'URL
-# links = [art.find("a").get('href') for art in articles]
-
-# # on récupère la disponibilité
-# dispos = [art.find(class_="instock availability").get_text().replace("\n","").strip() for art in articles]
-
-# On enregistre direct les éléments dans un dico
-formatted_articles = []
-
-for art in articles:
-	data = {
-		'title': art.find('a').get('title'),
-		"url": art.find("a").get('href'),
-		"price": art.find(class_='price_color').get_text(),
-		"dispo": art.find(class_="instock availability").get_text().replace("\n","").strip()
-	}
-	formatted_articles.append(data)
-
-print(formatted_articles)
+	def table_analysis(self):
+		data = {
+			'title': self.soup.find('li',class_="active" ).get_text(),
+			'description': self.soup.find("meta", {"name":"description"}).get('content').replace("\n","").strip(),
+			'rating': self.soup.find("div",class_="col-sm-6 product_main").select("p:nth-of-type(3)")[0].get('class')[1]
+		}
+		for child in self.soup.find("table", {"class":"table table-striped"}):
+			if child.find('th') != -1:
+				data[str(child.find('th')).replace("<th>","").replace("</th>","")]=str(child.find('td')).replace("<td>","").replace("</td>","")
+		data.pop("Product Type")
+		data.pop("Tax")
+		data.pop("Number of reviews")
+		data["Price (excl. tax)"] = data["Price (excl. tax)"].replace("Â£","")
+		data["Price (incl. tax)"] = data["Price (incl. tax)"].replace("Â£","")
+		return data		
+				
+test = Scrapper('http://books.toscrape.com/catalogue/soumission_998/index.html')
+print(test.table_analysis())
