@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-# Class explorer: trouve les URL des produits
+# Class explorer: Gère les pages
 class explorer:
 	def __init__(self,url):
 		self.url = url
@@ -27,15 +27,11 @@ class explorer:
 				print("n'a pas fonctionné")
 				return None
 
-	# def get_pages(self):
-	# 	pages = []
-	# 	page = self.soup()
-	# 	while page:
-	# 		page = get_next_page(page)
-	# 		pages.append(next_page)
-	# 	return pages
-
-
+	def data_geter(self):
+		articles = self.soup.find_all('article',class_='product_pod')
+		urls = [art.find("a").get('href').replace("../../..","http://books.toscrape.com/catalogue") for art in articles]
+		datas = [Scrapper(url).table_analysis() for url in urls]
+		return datas
 
 # Class Scrapper: scrappe les infos d'une page produit
 class Scrapper:
@@ -76,34 +72,20 @@ class Scrapper:
 		data["Price (incl. tax)"] = data["Price (incl. tax)"].replace("Â£","")
 		return data		
 
-
-def data_geter(url):
-	urls = explorer(url)
-	articles = urls.get_articles()
-	datas = [Scrapper(art).table_analysis() for art in articles]
-	return datas
-
 def page_scrapper(url):	
 	url_tool = url.replace('index.html','')
 	urls = explorer(url)
-	# datas = data_geter(url)
+	datas = urls.data_geter()
 	next_page = urls.get_next_page()
-	while next_page:
+	while next_page:	
 		page = explorer(url_tool + next_page)
-		# datas.append(data_geter(page))
+		datas.append(page.data_geter())
 		next_page = page.get_next_page()			
-	return "pouette"	
-
-
-# On récupère toutes les infos des articles d'une page
-# urls = explorer('http://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html')
-# articles = urls.get_articles()
-# articles_data = [Scrapper(art).table_analysis() for art in articles]
-#On check s'il existe une page suivante et si oui, on la scrappe et on vérifie la page suivante une nouvelle fois
+	return datas
 
 
 # Tester :
-test = page_scrapper('https://books.toscrape.com/catalogue/category/books/mystery_3/index.html')
+test = page_scrapper('https://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html')
 
 print(test)
 				
