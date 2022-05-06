@@ -2,8 +2,9 @@
 import requests
 from bs4 import BeautifulSoup
 import scrapper
+import csv
 
-class explorer:
+class Explorer:
     """liste les produits d'une catégorie et stock leurs données"""
 
     def __init__(self, url):
@@ -36,11 +37,11 @@ class explorer:
     def page_scrapper(url):
         """Renvoie une liste de toutes les données des produits d'une catégorie"""
         url_tool = url.replace('index.html', '')
-        urls = explorer(url)
+        urls = Explorer(url)
         datas = urls.data_geter()
         next_page = urls.get_next_page()
         while next_page:
-            page = explorer(url_tool + next_page)
+            page = Explorer(url_tool + next_page)
             datas.extend(page.data_geter())
             next_page = page.get_next_page()
         return datas
@@ -52,8 +53,22 @@ class explorer:
         urls = [("https://books.toscrape.com/") + li.find("a").get('href') for li in lis]
         return urls    
 
-    def site_getter(self):
-        """renvoie toutes les datas de tous les articles du site : YOLO """
-        categories = self.url_getter()
-        datas = [explorer.page_scrapper(category) for category in categories]
-        return datas 
+    def category_getter(self):
+        """récupère le nom de la catégorie"""
+        ul = self.soup.find('div',class_='container-fluid page').select('ul')[0]
+        name = ul.find('li',class_='active').get_text()
+        return name
+
+    # def site_getter(self):
+    #     """renvoie toutes les datas de tous les articles du site : YOLO """
+    #     categories = self.url_getter()
+    #     datas = [explorer.page_scrapper(category) for category in categories]
+    #     return datas 
+
+    # def csv_writer(self):
+    #     rows = self.page_scrapper()
+    #     field_names = ['title', 'description', 'rating','img','category','url','UPC','Price (excl. tax)', 'Price (incl. tax)', 'Availability']
+    #     with open('Products.csv','w',encoding="utf-8", newline='') as csvfile:
+    #         writer = csv.DictWriter(csvfile, fieldnames = field_names)
+    #         writer.writeheader()
+    #         writer.writerows(rows)    
