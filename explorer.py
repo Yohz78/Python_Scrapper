@@ -3,7 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 import scrapper
 
-
 class explorer:
     """liste les produits d'une catégorie et stock leurs données"""
 
@@ -35,14 +34,14 @@ class explorer:
         return datas
 
     def page_scrapper(url):
-        """Renoie une liste de toutes les données des produits d'une catégorie"""
+        """Renvoie une liste de toutes les données des produits d'une catégorie"""
         url_tool = url.replace('index.html', '')
         urls = explorer(url)
         datas = urls.data_geter()
         next_page = urls.get_next_page()
         while next_page:
             page = explorer(url_tool + next_page)
-            datas.append(page.data_geter())
+            datas.extend(page.data_geter())
             next_page = page.get_next_page()
         return datas
 
