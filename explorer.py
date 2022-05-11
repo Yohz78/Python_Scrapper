@@ -2,7 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import scrapper
-import csv
+
 
 class Explorer:
     """liste les produits d'une catégorie et stock leurs données"""
@@ -13,14 +13,14 @@ class Explorer:
     @property
     def soup(self):
         r = requests.get(self.url)
-        soup = BeautifulSoup(r.text, 'html.parser')
+        soup = BeautifulSoup(r.content, 'lxml')
         return soup
 
     def get_next_page(self):
         """Vérifie si la page suivante existe et la renvoie le cas échéant"""
-        next_page = self.soup.find('li', class_="next")
+        next_page = self.soup.find('li', class_='next')
         if next_page:
-            page = self.soup.find('li', class_="next").select('a')[
+            page = self.soup.find('li', class_='next').select('a')[
                 0].get('href')
             return page
         else:
@@ -30,7 +30,7 @@ class Explorer:
         """Récupère toutes les infos des produits d'une page"""
         articles = self.soup.find_all('article', class_='product_pod')
         urls = [art.find("a").get('href').replace(
-            "../../..", "http://books.toscrape.com/catalogue") for art in articles]
+            "../../..", 'http://books.toscrape.com/catalogue') for art in articles]
         datas = [scrapper.Scrapper(url).table_analysis() for url in urls]
         return datas
 
@@ -48,27 +48,15 @@ class Explorer:
 
     def url_getter(self):
         """renvoie une liste de toutes les URLs des catégories du site"""
-        ul = self.soup.find('ul',class_="nav nav-list").select('li')[0]
-        lis = ul.find_all('li') 
-        urls = [("https://books.toscrape.com/") + li.find("a").get('href') for li in lis]
-        return urls    
+        ul = self.soup.find('ul', class_='nav nav-list').select('li')[0]
+        lis = ul.find_all('li')
+        urls = [('https://books.toscrape.com/') +
+                li.find("a").get('href') for li in lis]
+        return urls
 
     def category_getter(self):
         """récupère le nom de la catégorie"""
-        ul = self.soup.find('div',class_='container-fluid page').select('ul')[0]
-        name = ul.find('li',class_='active').get_text()
+        ul = self.soup.find(
+            'div', class_='container-fluid page').select('ul')[0]
+        name = ul.find('li', class_='active').get_text()
         return name
-
-    # def site_getter(self):
-    #     """renvoie toutes les datas de tous les articles du site : YOLO """
-    #     categories = self.url_getter()
-    #     datas = [explorer.page_scrapper(category) for category in categories]
-    #     return datas 
-
-    # def csv_writer(self):
-    #     rows = self.page_scrapper()
-    #     field_names = ['title', 'description', 'rating','img','category','url','UPC','Price (excl. tax)', 'Price (incl. tax)', 'Availability']
-    #     with open('Products.csv','w',encoding="utf-8", newline='') as csvfile:
-    #         writer = csv.DictWriter(csvfile, fieldnames = field_names)
-    #         writer.writeheader()
-    #         writer.writerows(rows)    
